@@ -1,5 +1,6 @@
 package jpahook.jpashop.repository;
 
+import jpahook.jpashop.api.OrderSimpleApiController;
 import jpahook.jpashop.domain.Member;
 import jpahook.jpashop.domain.Order;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +31,7 @@ public class OrderRepository {
     }
 
     // 검색 로직
-    public List<Order> findAllByCriteria(OrderSearch orderSearch) {
+    public List<Order> findAllByString(OrderSearch orderSearch) {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Order> cq = cb.createQuery(Order.class);
         Root<Order> o = cq.from(Order.class);
@@ -54,4 +55,22 @@ public class OrderRepository {
         return query.getResultList();
     }
 
+    // v3 할때 패치조인! jpa만 있는 문법 >jpa 강좌로 100 % 이해해야한다.
+    public List<Order> findAllWithMemberDelivery() {
+        return em.createQuery(
+                        "select o from Order o" +
+                                " join fetch o.member m" +
+                                " join fetch o.delivery d", Order.class)
+                .getResultList();
+    }
+
+    public List<OrderSimpleQueryDto> findOrderDtos() {
+        return em.createQuery(
+                "select new jpahook.jpashop.repository.OrderSimpleQueryDto(o.id, m.name, o.orderDate, o.status, d.address)" +
+                        "from Order o" +
+                        " join o.member m" +
+                        " join o.delivery d", OrderSimpleQueryDto.class)
+                .getResultList();
+
+    }
 }
